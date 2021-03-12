@@ -1,0 +1,103 @@
+const Sauce = require('../models/sauce');
+const express = require('express');
+const router = express.Router();
+
+// Submit sauce
+// POST /api/sauces
+router.post('/', (req, res, next) => {
+    const body = req.body;
+
+    const sauce = new Sauce({
+        userId: req.params.userId,
+        name: body.name,
+        manufacturer: body.manufacturer,
+        description: body.description,
+        imageUrl: body.imageUrl,
+        mainPepper: body.mainPepper,
+        heat: body.heat,
+        usersLiked: [],
+        usersDisliked: []
+    });
+    sauce.save()
+        .then(() => {
+            res.status(201).json({
+            message: 'Sauce saved successfully!'
+            });
+        })
+        .catch((error) => {
+            res.status(500).json({
+                error: error
+            });
+        });
+});
+
+// Retrieve a single sauce
+// GET /api/sauces/:id
+router.get('/:id', (req, res, next) => {
+    Sauce.findOne({ _id: req.params.id })
+        .then((sauce) => {
+            res.status(200).json(sauce);
+        })
+        .catch((error) => {
+            res.status(404).json({
+            error: error
+            });
+        });
+});
+
+// Update a single sauce
+// PUT /api/sauces/:id
+router.put('/:id', (req, res, next) => {
+    const body = req.body;
+
+    const sauce = new Sauce({
+        userId: body.userId,
+        name: body.name,
+        manufacturer: body.manufacturer,
+        description: body.description,
+        imageUrl: body.imageUrl,
+        mainPepper: body.mainPepper,
+        heat: body.heat,
+        usersLiked: body.usersLiked,
+        usersDisliked: body.usersDisliked
+    })
+    Sauce.updateOne({ _id: req.params.id }, sauce)  
+        .then(() => {
+            res.status(201).json('Sauce updated successfully');
+        })
+        .catch((error) => {
+            res.status(500).json({
+            error: error
+            });
+        });
+});
+
+// Delete a single sauce
+// DELETE /api/sauces/:id
+router.delete('/:id', (req, res, next) => {
+    Sauce.deleteOne({ _id: req.params.id })  
+        .then(() => {
+            res.status(201).json('Sauce deleted successfully');
+        })
+        .catch((error) => {
+            res.status(500).json({
+            error: error
+            });
+        });
+});
+
+// Retrieve all sauces
+// GET /api/sauces
+router.get('/', (req, res, next) => {
+    Sauce.find()
+        .then((sauces) => {
+            res.status(200).json(sauces);
+        })
+        .catch((error) => {
+            res.status(400).json({
+            error: error
+            });
+        });
+});
+
+module.exports = router;
