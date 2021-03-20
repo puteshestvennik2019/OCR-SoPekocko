@@ -1,6 +1,6 @@
 const cloudinary = require('../utils/cloudinary');
 
-const deleteResponse = (url) => {
+const deleteResponse = async (url) => {
     /* Q: Best practice to handle/save public ID? Potential problem - when saving files in a folder
     Possible approaches: 
         - Image object in DB
@@ -8,7 +8,7 @@ const deleteResponse = (url) => {
     */
     try {
         const pubId = url.split('/').pop().split('.')[0];
-        const response = cloudinary.uploader.destroy(pubId, function(error,result) {
+        const response = await cloudinary.uploader.destroy(pubId, function(error,result) {
             // if (error)... potential problems: path, cloudinary server - how to handle?
         });
         return response;
