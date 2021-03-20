@@ -19,7 +19,8 @@ router.post('/signup', (req, res, next) => {
                 })
                 .catch((error) => {
                     if (error.message.split(':')[0] == "User validation failed") {
-                        res.status(500).json({ error: new Error("Email already registered") });
+                        // error code and error msg
+                        res.status(409).json({ message: 'Email already registered' });
                     }
                     else {
                         res.status(500).json({ error: error });

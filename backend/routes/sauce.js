@@ -1,18 +1,31 @@
 const Sauce = require('../models/sauce');
 const express = require('express');
 const router = express.Router();
+const multer = require('../middleware/multer');
+const uploadFromBufferToCloud = require('../utils/uploadFileToCloud');
+require('dotenv').config();
 
 // Submit sauce
 // POST /api/sauces
-router.post('/', (req, res, next) => {
-    const body = req.body;
+router.post('/', multer, async (req, res, next) => {
+    let imageUrl = '';
+    if (req.file) {
+        imageUrl = await uploadFromBufferToCloud(req.file);
+    }
+    else {
+        imageUrl = `${req.protocol}'://'${req.get('host')}/images/${req.file.filename}`;
+    }
+
+    console.log(imageUrl)
+
+    const body = JSON.parse(req.body.sauce);
 
     const sauce = new Sauce({
-        userId: req.params.userId,
+        userId: body.userId,
         name: body.name,
         manufacturer: body.manufacturer,
         description: body.description,
-        imageUrl: body.imageUrl,
+        imageUrl: imageUrl,
         mainPepper: body.mainPepper,
         heat: body.heat,
         usersLiked: [],
