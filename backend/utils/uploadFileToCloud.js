@@ -8,7 +8,7 @@ const uploadResponse = async (file) => {
     const response = await cloudinary.uploader.upload(
         parser.format(path.extname(file.originalname).toString(), file.buffer).content,
         { upload_preset: 'so_pekocko' });
-    return response.url;
+    return response.secure_url;
 }
 
 module.exports = uploadResponse;

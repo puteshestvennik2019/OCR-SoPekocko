@@ -1,8 +1,11 @@
 const Sauce = require('../models/sauce');
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const multer = require('../middleware/multer');
 const uploadFromBufferToCloud = require('../utils/uploadFileToCloud');
+const deleteFileFromCloud = require('../utils/deleteFileFromCloud');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Submit sauce
@@ -15,8 +18,6 @@ router.post('/', multer, async (req, res, next) => {
     else {
         imageUrl = `${req.protocol}'://'${req.get('host')}/images/${req.file.filename}`;
     }
-
-    console.log(imageUrl)
 
     const body = JSON.parse(req.body.sauce);
 
@@ -34,7 +35,7 @@ router.post('/', multer, async (req, res, next) => {
     sauce.save()
         .then(() => {
             res.status(201).json({
-            message: 'Sauce saved successfully!'
+                message: 'Sauce saved successfully!'
             });
         })
         .catch((error) => {
@@ -53,7 +54,7 @@ router.get('/:id', (req, res, next) => {
         })
         .catch((error) => {
             res.status(404).json({
-            error: error
+                error: error
             });
         });
 });
@@ -76,11 +77,13 @@ router.put('/:id', (req, res, next) => {
     })
     Sauce.updateOne({ _id: req.params.id }, sauce)  
         .then(() => {
-            res.status(201).json('Sauce updated successfully');
+            res.status(201).json({
+                message: 'Sauce updated successfully' 
+            });
         })
         .catch((error) => {
             res.status(500).json({
-            error: error
+                error: error
             });
         });
 });
@@ -88,15 +91,28 @@ router.put('/:id', (req, res, next) => {
 // Delete a single sauce
 // DELETE /api/sauces/:id
 router.delete('/:id', (req, res, next) => {
-    Sauce.deleteOne({ _id: req.params.id })  
-        .then(() => {
-            res.status(201).json('Sauce deleted successfully');
+    Sauce.findOne({ _id: req.params.id })
+        .then((sauce) => {
+            Sauce.deleteOne({ _id: req.params.id })  
+                .then(() => {
+                    // TODO: handle error when deleting from cloudinary
+                    deleteFileFromCloud(sauce.imageUrl);
+                    res.status(201).json({
+                        message: 'Sauce deleted successfully' 
+                    });
+                })
+                .catch((error) => {
+                    res.status(500).json({
+                        error: error
+                    });
+                });
+
         })
         .catch((error) => {
-            res.status(500).json({
-            error: error
-            });
-        });
+            res.status(400).json({
+                error: error
+            })
+        })
 });
 
 // Retrieve all sauces
@@ -108,7 +124,7 @@ router.get('/', (req, res, next) => {
         })
         .catch((error) => {
             res.status(400).json({
-            error: error
+                error: error
             });
         });
 });
