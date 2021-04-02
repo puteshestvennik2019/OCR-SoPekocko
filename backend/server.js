@@ -33,3 +33,16 @@ const errorHandler = error => {
   });
   
   server.listen(PORT);
+
+
+  /*
+https.createServer({
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+    passphrase: 'YOUR PASSPHRASE HERE'
+}, app);
+
+To generate cert:
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+
+  */

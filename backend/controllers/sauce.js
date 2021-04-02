@@ -2,8 +2,11 @@ const Sauce = require('../models/sauce');
 const uploadFromBufferToCloud = require('../utils/uploadFileToCloud');
 const deleteFileFromCloud = require('../utils/deleteFileFromCloud');
 const helper = require('../utils/checkIfIncludes');
+const getUserId = require('../utils/getUserIdFromToken');
 
 exports.likeSauce = (req, res, next) => {
+    if (req.body.like > 1 || req.body.like < -1) res.status(403);
+
     Sauce.findOne({ _id: req.params.id })
         .then((sauce) => {
             sauce.usersLiked = helper.checkIfIncludes(req.body.userId, sauce.usersLiked, req.body.like !== 1);
@@ -104,7 +107,7 @@ exports.updateSauce = async (req, res, next) => {
 
             // if new file is being uploaded, delete the old one
             if (sauce.imageUrl != '') {
-                // TODO: handle error when deleting from cloudinary
+                // TODO: handle error when deleting from cloudinary - exponential backoff
                 deleteFileFromCloud(oldSauce.imageUrl);
             }
             else {
@@ -118,7 +121,7 @@ exports.updateSauce = async (req, res, next) => {
                     });
                 })
                 .catch((error) => {
-                    // mongodb doesn't allow duplicate names (code 11000) and front end doesn't handle responses other than 200s
+                    // mongodb doesn't allow duplicate names for this schema (code 11000) and front end doesn't handle responses other than 200s
                     // if (error.code === 11000 ) {
                     //     res.status(299).json({
                     //         message: 'Sauce with this name already exists'
@@ -139,12 +142,18 @@ exports.updateSauce = async (req, res, next) => {
 };
 
 exports.deleteSauce = (req, res, next) => {
+    const userId = getUserId(req.headers.authorization.split(' ')[1]);
+
     Sauce.findOne({ _id: req.params.id })
         .then((sauce) => {
+            if (sauce.userId != userId) {
+                res.status(403);
+            }
+
+            // TODO: handle error when deleting from cloudinary - exponential backoff
+            deleteFileFromCloud(sauce.imageUrl);
             Sauce.deleteOne({ _id: req.params.id })  
                 .then(() => {
-                    // TODO: handle error when deleting from cloudinary
-                    deleteFileFromCloud(sauce.imageUrl);
                     res.status(201).json({
                         message: 'Sauce deleted successfully' 
                     });
